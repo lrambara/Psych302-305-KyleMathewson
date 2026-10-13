@@ -218,7 +218,9 @@
       }
 
       function finishTrial(correct, note) {
-        if (!awaiting && !responded) return;
+        // The response handler already sets awaiting=false before calling this.
+        // Guard against duplicate completions instead of rejecting valid responses.
+        if (!running || responded) return;
         window.clearTimeout(timer);
         awaiting = false;
         responded = true;
