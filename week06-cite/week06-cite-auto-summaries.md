@@ -1,43 +1,39 @@
 # Week 6 — Automated Paper Summaries
 
-## Paper
+## Part 2: Five Papers Using One Automated Tool
 
-Pagoti, G. F., Hogan, J. A., & Willemart, R. H. (2024). Habituation to a predatory stimulus in a harvester (Arachnida, Opiliones). *Animal Cognition, 27*, Article 21.
+**Project topic:** Visual reaction time and attention in Valorant and other action video games.
 
-DOI: https://doi.org/10.1007/s10071-024-01857-7
+**Automated tool:** ChatGPT
 
-## Part 2: Automated Summaries
+**Exact prompt used:**
 
-### Tool 1: ChatGPT
+"For each of the five research papers listed below, summarize the research question, method, and one limitation in three sentences. Identify the dependent measure. Do not invent details. If information cannot be verified from the paper, say so. Keep each paper's summary separate."
 
-**Prompt:** Summarize this research paper in 3–8 sentences, explaining its research question, methods, findings, and relevance to learning psychology.
+## Five Research Papers
 
-**Summary:**
+1. Castel, A. D., Pratt, J., & Drummond, E. (2005). The effects of action video game experience on the time course of inhibition of return and the efficiency of visual search. *Acta Psychologica, 119*(2), 217–230. https://doi.org/10.1016/j.actpsy.2005.02.004
 
-[Insert ChatGPT's summary after checking it against the paper.]
+2. Green, C. S., & Bavelier, D. (2003). Action video game modifies visual selective attention. *Nature, 423*, 534–537. https://doi.org/10.1038/nature01647
 
-### Tool 2: Google Gemini
+3. Dye, M. W. G., Green, C. S., & Bavelier, D. (2009). Increasing speed of processing with action video games. *Current Directions in Psychological Science, 18*(6), 321–326. https://doi.org/10.1111/j.1467-8721.2009.01660.x
 
-**Prompt:** Summarize this research paper in 3–8 sentences, explaining its research question, methods, findings, and relevance to learning psychology.
+4. Colzato, L. S., van den Wildenberg, W. P. M., Zmigrod, S., & Hommel, B. (2013). Action video gaming and cognitive control: Playing first person shooter games is associated with improvement in working memory but not action inhibition. *Psychological Research, 77*, 234–239. https://doi.org/10.1007/s00426-012-0415-2
 
-**Summary:**
+5. Bediou, B., Adams, D. M., Mayer, R. E., Tipton, E., Green, C. S., & Bavelier, D. (2018). Meta-analysis of action video game impact on perceptual, attentional, and cognitive skills. *Psychological Bulletin, 144*(1), 77–110. https://doi.org/10.1037/bul0000130
 
-[Insert Gemini's actual response.]
+## Automated Summaries and Accuracy Audit
 
-### Tool 3: Third AI Tool
+| Paper | AI summary: question, method, limitation | Question check | Method check | Limitation check |
+|---|---|---|---|---|
+| Castel et al. (2005) | To be added after checking the paper | Pending | Pending | Pending |
+| Green & Bavelier (2003) | To be added after checking the paper | Pending | Pending | Pending |
+| Dye et al. (2009) | To be added after checking the paper | Pending | Pending | Pending |
+| Colzato et al. (2013) | To be added after checking the paper | Pending | Pending | Pending |
+| Bediou et al. (2018) | To be added after checking the paper | Pending | Pending | Pending |
 
-**Tool name:** [Insert name]
+**Marking key:** Matches / Partly / Wrong. Marks must be assigned after comparing the AI-generated claims against each original paper.
 
-**Prompt:** Summarize this research paper in 3–8 sentences, explaining its research question, methods, findings, and relevance to learning psychology.
+## Part 1 Versus Automated Tool Reflection
 
-**Summary:**
-
-[Insert the third tool's actual response.]
-
-## Comparison of Automated Summaries
-
-[Compare the three summaries after collecting them. Discuss accuracy, missing information, invented details, and which tool was most useful.]
-
-## Part 3: Reflection
-
-[Write 4–6 sentences explaining what you kept, changed, or corrected when preparing your final summary.]
+To be completed after the five summaries have been generated and checked. Discuss what the tool missed or invented, how long each approach took, and which approach would be more trustworthy for a literature review.
