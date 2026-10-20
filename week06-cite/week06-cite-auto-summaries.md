@@ -118,6 +118,11 @@ These marks are based on comparisons with the published abstracts. A complete fu
 
 ChatGPT helped me organize five research papers and identify their research questions and methods more quickly than summarizing each paper individually. Comparing its summaries with the published abstracts showed that most research questions and methods were represented accurately, but the limitations were often generic rather than specific to the papers. For example, the AI did not identify publication bias or the published correction associated with Bediou et al. (2018). Writing the Part 1 summary required more direct reading, whereas ChatGPT made it easier to compare several studies in a consistent format. I would use the automated tool to create an initial outline, but I would trust the original research papers more when writing a literature review.
 
-**Time spent on Part 1:** [Enter your actual approximate time]
+**Time spent on Part 1:** Approximately 20 minutes.
 
-**Time spent using ChatGPT:** [Enter your actual approximate time]
+**Time spent using ChatGPT:** Approximately 25 minutes, including checking the summaries against the published abstracts.
+
+## Source
+
+Original research paper (PDF):
+https://castel.psych.ucla.edu/wp-content/uploads/sites/111/2016/11/Acta2005.pdf
