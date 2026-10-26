@@ -59,7 +59,11 @@ The researchers likely calculated the Stroop effect by subtracting congruent rea
 
 ### What I Missed
 
-*To be completed after checking the original published Methods section.*
+1. **Number of trials:** I predicted approximately 40–100 trials per condition, but the researchers used 240 per condition (720 total). More trials could produce more stable reaction-time estimates.
+
+2. **Neutral condition:** I predicted congruent and incongruent trials but missed the neutral condition, which used non-colour words matched for length and frequency. This provides an additional comparison condition.
+
+3. **Exclusion rules:** I predicted that unusually fast and slow responses would be removed, but I did not specify the researchers' rules. They excluded reaction times below 100 ms or more than three median absolute deviations from the participant's median. Different exclusion rules could change the mean reaction times and Stroop effect.
 
 ### Data Reanalysis
 
