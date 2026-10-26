@@ -9,3 +9,5 @@ The participant will identify the ink colour rather than read the word. Congruen
 
 #### Data Handling
 The experiment will record the condition, word, ink colour, response key, accuracy, and reaction time in milliseconds. Practice trials, incorrect responses, and reaction times below 150 ms or above 2500 ms will be excluded from the reaction-time analysis. Mean correct reaction times will be calculated separately for congruent and incongruent trials. The Stroop effect will be calculated as the incongruent mean minus the congruent mean.
+
+I completed 40 scored trials in the Stroop task. Of these, 39 trials produced valid correct responses. My mean reaction time was 615 ms for congruent trials and 711 ms for incongruent trials. The Stroop effect was calculated by subtracting the congruent mean from the incongruent mean (711 − 615 = 96 ms). This means I responded 96 ms slower when the word and ink colour did not match, demonstrating the Stroop interference effect.
