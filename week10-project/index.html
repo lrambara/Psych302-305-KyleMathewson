@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Scream to Survive — Fixed V4</title>
+<title>Scream to Survive — V4.1 Visible Controls</title>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #88c8ff; font-family: Arial, Helvetica, sans-serif; }
@@ -14,7 +14,7 @@
     background: rgba(7, 18, 35, 0.62); border: 1px solid rgba(146, 219, 255, 0.45); line-height: 1.55;
   }
   #topRight {
-    position: absolute; top: 18px; right: 18px; max-width: 320px; text-align: right; font-size: 14px;
+    position: absolute; top: 18px; right: 18px; width: min(340px, 38vw); text-align: left; font-size: 15px; line-height: 1.6; padding: 14px 16px; background: rgba(7, 18, 35, .84); border: 1px solid rgba(146, 219, 255, .65); border-radius: 14px;
   }
   #crosshair {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -76,6 +76,7 @@
   #micStatus {font-size:12px; color:#a7ffdb;}
   #panel {max-height:94vh; overflow-y:auto;}
   #conditionBanner {min-width:250px;}
+  @media(max-width:700px) { #topRight { top:auto; bottom:170px; right:10px; width:210px; font-size:12px; padding:8px; } #topLeft {font-size:12px; padding:8px;} }
 
 
 </style>
@@ -94,10 +95,15 @@
     Trials recorded: <b id="trialCount">0</b>
   </div>
   <div id="topRight">
-    <b>CONTROLS</b><br>
-    WASD move · Mouse look · Space jump · Shift sprint<br>
-    Press <b>F</b> to parry enemy attacks<br>
-    After a parry: hold <b>left click</b> and scream to charge, then release to fire
+    <b>🎮 CONTROLS</b><br>
+    <b>W A S D</b> — Move<br>
+    <b>Mouse</b> — Look / Aim<br>
+    <b>Space</b> — Jump<br>
+    <b>Shift</b> — Sprint<br>
+    <b>F</b> — Parry an enemy attack<br>
+    <b>Hold Left Click</b> — Charge + shout<br>
+    <b>Release Left Click</b> — Fire beam<br>
+    <b>Esc</b> — Release mouse
   </div>
   <div id="conditionBanner">FREE PLAY<small>Parry to charge your counterattack</small></div>
   <div id="crosshair"></div>
@@ -113,6 +119,7 @@
     <h1>⚔️ SCREAM TO SURVIVE</h1>
     <p>This version adds the full psychology idea: enemies attack you, you must <b>parry with F</b>, and then you <b>scream to power up a blue energy beam</b> for your counterattack.</p>
     <p>Parry the sword strike with <b>F</b>, then hold left-click and use your voice to charge a glowing beam. Enemies now react to hits.</p>
+    <div style="background:#0b2038;border:1px solid #70caff88;border-radius:12px;padding:12px;line-height:1.8;text-align:left"><b>🎮 CONTROLS</b><br><b>WASD</b> Move · <b>Mouse</b> Aim · <b>Space</b> Jump · <b>Shift</b> Sprint<br><b>F</b> Parry · <b>Hold left click + shout</b> Charge · <b>Release</b> Fire · <b>Esc</b> Unlock mouse</div>
     <div class="modes">
       <label><input type="radio" name="mode" value="free" checked> Free play (4 enemies)</label>
       <label><input type="radio" name="mode" value="experiment"> Psychology experiment (1 enemy)</label>
