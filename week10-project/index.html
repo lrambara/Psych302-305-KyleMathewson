@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Scream to Survive — Parry Prototype</title>
+<title>Scream to Survive — Fixed V4</title>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #88c8ff; font-family: Arial, Helvetica, sans-serif; }
-  canvas { display: block; }
-  #hud { position: fixed; inset: 0; pointer-events: none; color: white; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
+  canvas { display: block; position:fixed; inset:0; z-index:0; }
+  #hud { position: fixed; inset: 0; z-index:2; pointer-events: none; color: white; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
   #topLeft {
     position: absolute; top: 18px; left: 18px; padding: 12px 14px; border-radius: 14px;
     background: rgba(7, 18, 35, 0.62); border: 1px solid rgba(146, 219, 255, 0.45); line-height: 1.55;
@@ -71,6 +71,12 @@
   .modes label {background:#263b54; padding:12px; border-radius:12px; cursor:pointer;}
   #dataButton,#overData {background:#e2f6ff; font-size:14px; padding:10px 18px;}
   #trialCount {font-variant-numeric:tabular-nums;}
+  #micWrap { width:135px; height:8px; background:#173854; border:1px solid #9feaff; border-radius:10px; overflow:hidden; margin:3px 0 7px; }
+  #micFill {height:100%; width:0%; background:#36f4dc;}
+  #micStatus {font-size:12px; color:#a7ffdb;}
+  #panel {max-height:94vh; overflow-y:auto;}
+  #conditionBanner {min-width:250px;}
+
 
 </style>
 </head>
@@ -82,11 +88,13 @@
     Kills: <b id="kills">0</b><br>
     Parries: <b id="parries">0</b><br>
     Last reaction: <b id="reaction">—</b><br>
-    Mic volume: <b id="volume">0</b>%<br>
+    Mic volume: <b id="volume">0</b>%
+    <div id="micWrap"><div id="micFill"></div></div>
+    <span id="micStatus">Mic not started</span><br>
     Trials recorded: <b id="trialCount">0</b>
   </div>
   <div id="topRight">
-    <b>Controls</b><br>
+    <b>CONTROLS</b><br>
     WASD move · Mouse look · Space jump · Shift sprint<br>
     Press <b>F</b> to parry enemy attacks<br>
     After a parry: hold <b>left click</b> and scream to charge, then release to fire
@@ -110,6 +118,7 @@
       <label><input type="radio" name="mode" value="experiment"> Psychology experiment (1 enemy)</label>
     </div>
     <p id="modeDescription">Fight freely and practice parrying.</p>
+    <p><b>Microphone check:</b> After allowing access, speak normally and watch the mic bar in the top-left. Try shouting to charge faster.</p>
     <button id="play">Enable Mic & Play</button>
     <button id="dataButton" type="button">Export trial CSV</button>
     <p id="error"></p>
@@ -148,6 +157,7 @@ afterRenderer();
 function afterRenderer() {
   renderer.domElement.style.position = 'fixed';
   renderer.domElement.style.inset = '0';
+  renderer.domElement.style.zIndex = '0';
 }
 
 scene.add(new THREE.HemisphereLight(0xbce5ff, 0x5e8b45, 2.3));
@@ -215,7 +225,8 @@ const path = new THREE.Mesh(
 );
 path.rotation.x = -Math.PI / 2;
 path.position.y = 0.02;
-scene.add(path);
+// Flat grass only: decorative ring removed so combatants share one y=0 surface.
+// scene.add(path);
 
 // low walls and props
 function addWall(x, z, w, h, d) {
@@ -272,7 +283,8 @@ for (let i = 0; i < 220; i++) {
   t.position.set(Math.cos(angle) * radius + (Math.random() - 0.5) * 12, 0.35, Math.sin(angle) * radius + (Math.random() - 0.5) * 12);
   t.rotation.y = Math.random() * Math.PI;
   t.castShadow = false;
-  scene.add(t);
+  // No tall tufts covering the enemy feet / obscuring the arena.
+  // scene.add(t);
 }
 
 // ---------- Player ----------
@@ -332,12 +344,13 @@ $('dataButton').onclick = exportTrials;
 $('overData').onclick = exportTrials;
 document.querySelectorAll('input[name="mode"]').forEach(el => el.onchange = () => {
   $('modeDescription').textContent = document.querySelector('input[name="mode"]:checked').value === 'experiment'
-    ? 'Single enemy; alternating 8-trial silent and vocal blocks. Both conditions require a parry. Export CSV when finished.'
+    ? 'One enemy directly ahead; 8 silent then 8 vocal trials (or reverse). Press F on RED. Export trial CSV after several warnings.'
     : 'Fight freely and practice parrying with 4 enemies.';
 });
 
 // ---------- Audio / charge ----------
-let analyser, waveData;
+let analyser, waveData, audioContext, microphoneStream;
+let micBaseline=0;
 let micVolume = 0;
 let charging = false;
 let charge = 0;
@@ -362,14 +375,14 @@ function note(text) {
 }
 
 async function setupMicrophone() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: true, noiseSuppression: false },
+  microphoneStream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     video: false
   });
-  const context = new AudioContext();
-  await context.resume();
-  const source = context.createMediaStreamSource(stream);
-  analyser = context.createAnalyser();
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  await audioContext.resume();
+  const source = audioContext.createMediaStreamSource(microphoneStream);
+  analyser = audioContext.createAnalyser();
   analyser.fftSize = 1024;
   waveData = new Uint8Array(analyser.fftSize);
   source.connect(analyser);
@@ -384,7 +397,9 @@ function readVolume() {
     total += s * s;
   }
   const rms = Math.sqrt(total / waveData.length);
-  return Math.min(100, Math.round(rms * 460));
+  // This is a normalized signal-strength indicator, not a calibrated dB measurement.
+  // A higher multiplier makes normal microphones responsive to voices.
+  return Math.min(100, Math.round(rms * 1100));
 }
 
 $('play').onclick = async () => {
@@ -400,10 +415,18 @@ $('play').onclick = async () => {
       if(mode === 'experiment') {
         while(enemies.length > 1) removeEnemy(enemies.pop());
         player.health = 100;
+        $('hpText').textContent='100'; $('hpFill').style.width='100%';
+        // Start a controlled one-enemy trial directly in front of the camera.
+        player.pos.set(0,1.7,16); player.yaw=0; player.pitch=0;
+        const e=enemies[0];
+        if(e) {e.mesh.position.set(0,0,7); e.state='approach'; e.stateTime=0;
+          e.hp=120; e.nextAttackAt=performance.now()+2200; }
+        note('ONE-ENEMY TRIAL: watch the enemy in front of you. Press F on the red warning.');
         updateCondition();
       }
       document.querySelectorAll('input[name="mode"]').forEach(el=>el.disabled=true);
     }
+    if (audioContext && audioContext.state !== 'running') await audioContext.resume();
     renderer.domElement.requestPointerLock();
   } catch (err) {
     $('error').textContent = 'Could not enable microphone: ' + err.message;
@@ -463,6 +486,7 @@ function createHumanoidEnemy() {
   const swordMat = new THREE.MeshStandardMaterial({ color: 0xdce7f5, metalness: 0.7, roughness: 0.25, emissive: 0x120000 });
 
   const pelvis = new THREE.Group();
+  pelvis.position.y = -0.40; // boots touch the flat ground at y=0
   group.add(pelvis);
 
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.15, 0.45), bodyMat);
@@ -574,6 +598,11 @@ function destroyEnemy(enemyIndex) {
   $('kills').textContent = player.kills;
   note('Enemy defeated!');
   spawnEnemy();
+  if (mode === 'experiment') {
+    const fresh = enemies[enemies.length-1];
+    fresh.mesh.position.set(player.pos.x, 0, Math.max(-26, player.pos.z-9));
+    fresh.nextAttackAt = performance.now() + 2400;
+  }
 }
 
 function tryParry() {
@@ -591,7 +620,7 @@ function tryParry() {
     if (distance > 4.6) continue;
     diff.normalize();
     const facing = diff.dot(forward);
-    if (facing < 0.25) continue;
+    if (facing < (mode === 'experiment' ? -0.2 : 0.25)) continue;
     if (distance < bestDist) {
       bestDist = distance;
       best = enemy;
@@ -767,6 +796,8 @@ function updatePlayer(dt) {
 
   micVolume = readVolume();
   $('volume').textContent = micVolume;
+  $('micFill').style.width = micVolume + '%';
+  $('micStatus').textContent = micVolume > 5 ? 'Mic detecting your voice' : 'Speak to test mic';
 
   if (canCounter && performance.now() > counterExpires && !charging) {
     canCounter = false;
@@ -775,7 +806,8 @@ function updatePlayer(dt) {
   }
 
   if (charging) {
-    charge = Math.min(100, charge + (7 + micVolume * 1.75) * dt);
+    // Charge primarily from microphone volume; silence should barely charge.
+    charge = Math.min(100, charge + (1.5 + Math.max(0, micVolume - 3) * 2.0) * dt);
     camera.getWorldDirection(forward);
     orb.position.copy(camera.position).addScaledVector(forward, 1.4).add(new THREE.Vector3(0, -0.17, 0));
     const size = 0.55 + charge / 60;
@@ -857,7 +889,7 @@ function updateEnemy(enemy, dt) {
     auraColor = 0xff4444;
     parts.bodyMat.color.setHex(0xcc4b4b);
     parts.swordMat.emissive.setHex(0xaa1111);
-    if (enemy === getNearestThreat()) note('Enemy attack incoming! PRESS F TO PARRY!');
+    if (enemy === getNearestThreat()) note('RED WARNING — PRESS F TO PARRY!');
     if (enemy.stateTime > 0.78) {
       enemy.state = 'attack';
       enemy.stateTime = 0;
@@ -873,7 +905,7 @@ function updateEnemy(enemy, dt) {
     if (!enemy.didDamage && enemy.stateTime > 0.16) {
       enemy.didDamage = true;
       if (distance < 3.4) {
-        hurtPlayer(14);
+        hurtPlayer(mode === 'experiment' ? 0 : 14);
         note('You got hit! Next time press F when the enemy attacks.');
       }
     }
