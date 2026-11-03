@@ -1,1 +1,127 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scream to Attack!</title>
+  <style>
+    body {
+      background: #151525;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    .game {
+      max-width: 500px;
+      margin: auto;
+      background: #24243b;
+      padding: 25px;
+      border-radius: 15px;
+    }
+    .enemy { font-size: 90px; margin: 20px; }
+    .bar {
+      background: #555;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #health {
+      background: #ff5050;
+      width: 100%;
+      height: 100%;
+    }
+    button {
+      padding: 12px 20px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    #start { background: #70e0a0; }
+    #attack { background: #ff9b5e; }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>Scream to Attack!</h1>
+    <p>The louder you scream, the stronger your attack!</p>
+
+    <div class="enemy">👾</div>
+    <p>Enemy HP: <span id="hp">100</span>/100</p>
+    <div class="bar"><div id="health"></div></div>
+
+    <h3>Microphone Volume: <span id="volume">0</span>%</h3>
+
+    <button id="start">Enable Microphone</button>
+    <button id="attack" disabled>ATTACK!</button>
+
+    <p id="message">Enable your microphone to begin.</p>
+  </div>
+
+  <script>
+    let hp = 100;
+    let volume = 0;
+    let analyser, data;
+
+    document.getElementById("start").onclick = async () => {
+      try {
+        const stream = await navigator.mediaDevices
+          .getUserMedia({ audio: true });
+
+        const audio = new AudioContext();
+        const source = audio.createMediaStreamSource(stream);
+        analyser = audio.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        data = new Uint8Array(analyser.fftSize);
+
+        document.getElementById("attack").disabled = false;
+        document.getElementById("start").disabled = true;
+        document.getElementById("message").textContent =
+          "Shout into your microphone, then attack!";
+
+        function measure() {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            const value = (data[i] - 128) / 128;
+            sum += value * value;
+          }
+
+          const rms = Math.sqrt(sum / data.length);
+          volume = Math.min(100, Math.round(rms * 400));
+          document.getElementById("volume").textContent = volume;
+          requestAnimationFrame(measure);
+        }
+        measure();
+      } catch (error) {
+        document.getElementById("message").textContent =
+          "Microphone permission required: " + error.message;
+      }
+    };
+
+    document.getElementById("attack").onclick = () => {
+      if (hp <= 0) {
+        hp = 100;
+      } else {
+        const damage = Math.max(1, volume);
+        hp = Math.max(0, hp - damage);
+        document.getElementById("message").textContent =
+          "You dealt " + damage + " damage!";
+      }
+
+      document.getElementById("hp").textContent = hp;
+      document.getElementById("health").style.width = hp + "%";
+
+      if (hp === 0) {
+        document.getElementById("message").textContent =
+          "Enemy defeated! Click ATTACK to restart.";
+      }
+    };
+  </script>
+</body>
+</html>
+
