@@ -1,127 +1,212 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scream to Attack!</title>
-  <style>
-    body {
-      background: #151525;
-      color: white;
-      text-align: center;
-      font-family: Arial, sans-serif;
-      padding: 30px;
-    }
-    .game {
-      max-width: 500px;
-      margin: auto;
-      background: #24243b;
-      padding: 25px;
-      border-radius: 15px;
-    }
-    .enemy { font-size: 90px; margin: 20px; }
-    .bar {
-      background: #555;
-      height: 20px;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    #health {
-      background: #ff5050;
-      width: 100%;
-      height: 100%;
-    }
-    button {
-      padding: 12px 20px;
-      margin: 10px;
-      cursor: pointer;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    #start { background: #70e0a0; }
-    #attack { background: #ff9b5e; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scream to Survive — FPS Prototype</title>
+<style>
+  * { box-sizing:border-box; }
+  html,body { margin:0; overflow:hidden; height:100%; background:#080e20; font-family:Arial,sans-serif; color:white; }
+  canvas { display:block; }
+  #hud { position:fixed; inset:0; pointer-events:none; }
+  #stats { position:absolute; top:18px; left:20px; padding:12px 16px; background:#071326bb; border:1px solid #64bcff55; border-radius:12px; font-size:15px; line-height:1.65; }
+  #info { position:absolute; top:18px; right:20px; max-width:270px; text-align:right; font-size:13px; color:#cbe7ff; text-shadow:0 2px 4px black; }
+  #crosshair { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:22px; height:22px; }
+  #crosshair:before,#crosshair:after { content:""; position:absolute; background:#d5f7ff; box-shadow:0 0 7px #00bfff; }
+  #crosshair:before { width:2px; height:22px; left:10px; }
+  #crosshair:after { height:2px; width:22px; top:10px; }
+  #meterWrap { position:absolute; bottom:52px; left:50%; transform:translateX(-50%); width:min(440px,88vw); text-align:center; }
+  #meter { height:19px; border:2px solid #9fdfff; background:#15283c; border-radius:11px; overflow:hidden; margin-top:8px; }
+  #fill { height:100%; width:0%; background:linear-gradient(90deg,#15a8ee,#76fcff,#fff); transition:width .07s; }
+  #message { position:absolute; bottom:105px; left:50%; transform:translateX(-50%); color:#dcfaff; text-shadow:0 0 10px #00aaff; font-weight:bold; white-space:nowrap; }
+  #menu { position:fixed; inset:0; z-index:10; display:flex; justify-content:center; align-items:center; background:#040b1bea; text-align:center; padding:20px; }
+  #panel { width:min(540px,100%); padding:30px; background:#14203a; border:1px solid #49baff77; border-radius:20px; box-shadow:0 0 45px #008fff30; }
+  h1 { margin:0 0 12px; color:#9ee9ff; }
+  p { line-height:1.5; }
+  button { cursor:pointer; padding:14px 26px; border:0; border-radius:9px; color:#061729; font-weight:bold; font-size:17px; background:#7ae8ff; }
+  #error { color:#ffb6ba; min-height:20px; }
+  small { color:#a9c8e8; }
+</style>
 </head>
 <body>
-  <div class="game">
-    <h1>Scream to Attack!</h1>
-    <p>The louder you scream, the stronger your attack!</p>
+<div id="hud">
+  <div id="stats">Enemies defeated: <b id="kills">0</b><br>Microphone level: <b id="volume">0</b>%<br>Last reaction: <b id="reaction">—</b></div>
+  <div id="info">WASD move · Mouse look · Space jump · Shift sprint<br>Hold LEFT CLICK + shout to charge · Release to fire<br>Esc unlocks mouse</div>
+  <div id="crosshair"></div>
+  <div id="message">Find an enemy and charge your blast!</div>
+  <div id="meterWrap"><strong>ENERGY CHARGE: <span id="chargeText">0</span>%</strong><div id="meter"><div id="fill"></div></div></div>
+</div>
+<div id="menu"><div id="panel">
+  <h1>⚡ SCREAM TO SURVIVE</h1>
+  <p>A first-person arena game. <b>Hold left-click</b> to gather blue energy, <b>shout into your microphone</b> to charge faster, and <b>release</b> to fire at the red enemies.</p>
+  <p>WASD to move · Mouse to aim · Space to jump · Shift to sprint</p>
+  <button id="play">Enable Mic & Play</button>
+  <p id="error"></p>
+  <small>Microphone audio is processed locally in your browser and isn't uploaded or saved. Requires a secure site (like GitHub Pages) or localhost.</small>
+</div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
 
-    <div class="enemy">👾</div>
-    <p>Enemy HP: <span id="hp">100</span>/100</p>
-    <div class="bar"><div id="health"></div></div>
+const $ = id => document.getElementById(id);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x081326);
+scene.fog = new THREE.Fog(0x081326, 25, 95);
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 150);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0x8ccaff, 0x1a2641, 2.5));
+const sun = new THREE.DirectionalLight(0xffffff, 2.1); sun.position.set(10,20,8); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(120,120),new THREE.MeshStandardMaterial({color:0x1d3346,roughness:0.85}));
+floor.rotation.x = -Math.PI/2; scene.add(floor);
+const grid = new THREE.GridHelper(120,60,0x287d9f,0x24445d); grid.position.y=0.013; scene.add(grid);
+const edgeMaterial = new THREE.MeshStandardMaterial({ color:0x315473, metalness:0.25 });
+function box(x,y,z,w,h,d,material=edgeMaterial) { const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); o.position.set(x,y,z); scene.add(o); return o; }
+box(0,2,-30,60,4,1); box(0,2,30,60,4,1); box(-30,2,0,1,4,60); box(30,2,0,1,4,60);
+for(const [x,z] of [[-12,-10],[14,9],[-13,14],[14,-15]]) box(x,1,z,3,2,3);
 
-    <h3>Microphone Volume: <span id="volume">0</span>%</h3>
+const player = { pos:new THREE.Vector3(0,1.7,19), vertical:0, grounded:true, yaw:0, pitch:0 };
+camera.position.copy(player.pos);
+const keys = new Set();
+let started=false, locked=false, charging=false, charge=0, volume=0, kills=0;
+let analyser, waveData, micStream;
+const enemies=[]; const effects=[];
+const enemyGeometry = new THREE.IcosahedronGeometry(1.15,1);
+const enemyMaterial = new THREE.MeshStandardMaterial({color:0xff3b63, emissive:0x8d1029,emissiveIntensity:0.5,flatShading:true});
+function spawnEnemy() {
+  const mesh=new THREE.Mesh(enemyGeometry,enemyMaterial.clone());
+  const angle=Math.random()*Math.PI*2, distance=11+Math.random()*14;
+  mesh.position.set(THREE.MathUtils.clamp(player.pos.x+Math.cos(angle)*distance,-25,25),1.7,THREE.MathUtils.clamp(player.pos.z+Math.sin(angle)*distance,-25,25));
+  scene.add(mesh);
+  enemies.push({mesh,hp:100,born:performance.now(),firstAttack:null,speed:0.4+Math.random()*0.35});
+}
+for(let i=0;i<5;i++) spawnEnemy();
 
-    <button id="start">Enable Microphone</button>
-    <button id="attack" disabled>ATTACK!</button>
-
-    <p id="message">Enable your microphone to begin.</p>
-  </div>
-
-  <script>
-    let hp = 100;
-    let volume = 0;
-    let analyser, data;
-
-    document.getElementById("start").onclick = async () => {
-      try {
-        const stream = await navigator.mediaDevices
-          .getUserMedia({ audio: true });
-
-        const audio = new AudioContext();
-        const source = audio.createMediaStreamSource(stream);
-        analyser = audio.createAnalyser();
-        analyser.fftSize = 2048;
-        source.connect(analyser);
-        data = new Uint8Array(analyser.fftSize);
-
-        document.getElementById("attack").disabled = false;
-        document.getElementById("start").disabled = true;
-        document.getElementById("message").textContent =
-          "Shout into your microphone, then attack!";
-
-        function measure() {
-          analyser.getByteTimeDomainData(data);
-          let sum = 0;
-          for (let i = 0; i < data.length; i++) {
-            const value = (data[i] - 128) / 128;
-            sum += value * value;
-          }
-
-          const rms = Math.sqrt(sum / data.length);
-          volume = Math.min(100, Math.round(rms * 400));
-          document.getElementById("volume").textContent = volume;
-          requestAnimationFrame(measure);
-        }
-        measure();
-      } catch (error) {
-        document.getElementById("message").textContent =
-          "Microphone permission required: " + error.message;
-      }
-    };
-
-    document.getElementById("attack").onclick = () => {
-      if (hp <= 0) {
-        hp = 100;
-      } else {
-        const damage = Math.max(1, volume);
-        hp = Math.max(0, hp - damage);
-        document.getElementById("message").textContent =
-          "You dealt " + damage + " damage!";
-      }
-
-      document.getElementById("hp").textContent = hp;
-      document.getElementById("health").style.width = hp + "%";
-
-      if (hp === 0) {
-        document.getElementById("message").textContent =
-          "Enemy defeated! Click ATTACK to restart.";
-      }
-    };
-  </script>
+const ball = new THREE.Mesh(new THREE.SphereGeometry(0.24,24,16),new THREE.MeshBasicMaterial({color:0x62ecff}));
+ball.visible=false; scene.add(ball);
+const ballLight=new THREE.PointLight(0x31ddff,0,5); scene.add(ballLight);
+const raycaster = new THREE.Raycaster();
+const forward=new THREE.Vector3();
+const clock=new THREE.Clock();
+function note(text) { $('message').textContent=text; }
+function updateMouse(e) {
+  if(!locked) return;
+  player.yaw -= e.movementX*0.0022;
+  player.pitch = THREE.MathUtils.clamp(player.pitch-e.movementY*0.0022,-1.45,1.45);
+}
+document.addEventListener('mousemove',updateMouse);
+document.addEventListener('pointerlockchange',()=>{
+  locked=document.pointerLockElement===renderer.domElement;
+  $('menu').style.display=locked?'none':'flex';
+  if(started && !locked) { $('play').textContent='Resume Game'; charging=false; ball.visible=false; }
+});
+document.addEventListener('keydown',e=>{
+  keys.add(e.code);
+  if(['Space','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup',e=>keys.delete(e.code));
+renderer.domElement.addEventListener('mousedown',e=>{
+  if(e.button!==0 || !locked) return;
+  charging=true; charge=0;
+  const now=performance.now();
+  // Reaction time: first attack started after the most recently spawned enemy appears.
+  const target=enemies.filter(o=>o.firstAttack===null).sort((a,b)=>b.born-a.born)[0];
+  if(target) { target.firstAttack=now; $('reaction').textContent=Math.round(now-target.born)+' ms'; }
+});
+document.addEventListener('mouseup',e=>{ if(e.button===0 && charging){ fire(); charging=false; ball.visible=false; } });
+async function setupMicrophone() {
+  micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:false},video:false});
+  const context=new AudioContext(); await context.resume();
+  const source=context.createMediaStreamSource(micStream);
+  analyser=context.createAnalyser(); analyser.fftSize=1024;
+  waveData=new Uint8Array(analyser.fftSize); source.connect(analyser);
+}
+$('play').onclick=async()=>{
+  try {
+    if(!started) { await setupMicrophone(); started=true; }
+    renderer.domElement.requestPointerLock();
+  } catch(err) { $('error').textContent='Could not enable the microphone: '+err.message; }
+};
+function readVolume() {
+  if(!analyser) return 0;
+  analyser.getByteTimeDomainData(waveData);
+  let total=0;
+  for(const v of waveData) { const s=(v-128)/128; total+=s*s; }
+  const rms=Math.sqrt(total/waveData.length);
+  // Approximate loudness indicator, NOT calibrated physical decibels.
+  return Math.min(100,Math.round(rms*450));
+}
+function fire() {
+  if(charge<2) return;
+  camera.getWorldDirection(forward);
+  const origin=camera.position.clone().addScaledVector(forward,1.2);
+  const length=45;
+  // Short-lived cylinder, aligned along the aim direction.
+  const geometry=new THREE.CylinderGeometry(0.14+charge*0.004,0.14+charge*0.004,length,18);
+  const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x58deff,transparent:true,opacity:0.83,depthWrite:false}));
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),forward);
+  mesh.position.copy(origin).addScaledVector(forward,length/2);
+  scene.add(mesh); effects.push({mesh,life:0.23});
+  // Aimed enemies take damage in a narrow beam path, including multiple hits.
+  const damage=Math.round(12+charge*1.35);
+  let hit=0;
+  for(let i=enemies.length-1;i>=0;i--) {
+    const enemy=enemies[i];
+    const offset=enemy.mesh.position.clone().sub(origin);
+    const along=offset.dot(forward);
+    const sideways=offset.addScaledVector(forward,-along).length();
+    if(along>0 && along<length && sideways<1.15+charge*0.004) {
+      enemy.hp-=damage; hit++;
+      enemy.mesh.material.emissive.setHex(0x55eeff);
+      if(enemy.hp<=0){scene.remove(enemy.mesh);enemy.mesh.material.dispose();enemies.splice(i,1);kills++;$('kills').textContent=kills;spawnEnemy();}
+    }
+  }
+  note(hit?`ENERGY BEAM! ${damage} damage · ${hit} hit`:'Missed! Aim at a red enemy.');
+  charge=0;
+}
+function animate() {
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  if(started && locked) {
+    camera.rotation.order='YXZ'; camera.rotation.y=player.yaw; camera.rotation.x=player.pitch;
+    const walk=new THREE.Vector3((keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),0,(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0));
+    if(walk.lengthSq()) {
+      walk.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),player.yaw);
+      const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?9:5.5;
+      player.pos.addScaledVector(walk,dt*speed);
+      player.pos.x=THREE.MathUtils.clamp(player.pos.x,-28,28);player.pos.z=THREE.MathUtils.clamp(player.pos.z,-28,28);
+    }
+    if(keys.has('Space') && player.grounded) { player.vertical=7; player.grounded=false; }
+    player.vertical-=19*dt; player.pos.y+=player.vertical*dt;
+    if(player.pos.y<=1.7){player.pos.y=1.7;player.vertical=0;player.grounded=true;}
+    camera.position.copy(player.pos);
+    volume=readVolume(); $('volume').textContent=volume;
+    if(charging) {
+      // Some baseline charge; higher voice level speeds it up significantly.
+      charge=Math.min(100,charge+(7+volume*1.7)*dt);
+      camera.getWorldDirection(forward);
+      ball.position.copy(camera.position).addScaledVector(forward,1.4).add(new THREE.Vector3(0,-0.2,0));
+      const size=0.7+charge/70; ball.scale.setScalar(size);ball.visible=true;
+      ballLight.position.copy(ball.position);ballLight.intensity=charge/13;
+    } else { ball.visible=false;ballLight.intensity=0; }
+    for(const enemy of enemies) {
+      const dir=player.pos.clone().sub(enemy.mesh.position);dir.y=0;
+      if(dir.length()>3) enemy.mesh.position.addScaledVector(dir.normalize(),dt*enemy.speed);
+      enemy.mesh.rotation.y+=dt*0.8;
+      enemy.mesh.material.emissive.lerp(new THREE.Color(0x8d1029),Math.min(1,dt*5));
+    }
+  }
+  $('chargeText').textContent=Math.round(charge);
+  $('fill').style.width=charge+'%';
+  for(let i=effects.length-1;i>=0;i--){
+    const fx=effects[i];fx.life-=dt;fx.mesh.material.opacity=Math.max(0,fx.life/0.23)*0.83;
+    if(fx.life<=0){scene.remove(fx.mesh);fx.mesh.geometry.dispose();fx.mesh.material.dispose();effects.splice(i,1);}
+  }
+  renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
 </body>
 </html>
-
