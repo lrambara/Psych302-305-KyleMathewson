@@ -1997,7 +1997,11 @@ function gameOver() {
   playing = false;
   phase = "over";
   clearTimeout(timer);
-  message.textContent = `The canopy closes. Score ${score}, level ${level}, ${turn} turns. Save your data.`;
+  // New feature: end-of-game performance summary (does not affect trials or CSV).
+  const correctTurns = data.filter((row) => row.correct === 1).length;
+  const accuracy = data.length ? (100 * correctTurns / data.length).toFixed(1) : "0.0";
+  message.textContent = `The canopy closes! Score ${score}, level ${level}. ` +
+    `You got ${correctTurns}/${data.length} correct (${accuracy}% accuracy). Save your data.`;
   stopJungleAmbience();
   playGameOverSound();
 }
