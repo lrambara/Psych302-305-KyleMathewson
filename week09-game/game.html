@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>In the Canopy · Week 9</title>
+<title>Jungle Scream Challenge · Week 9</title>
 <style>
   /* ---------- LOOK ----------
      Change colours here. The jungle itself is drawn in the script. */
@@ -163,7 +163,7 @@
   <span>Level: <b id="level">1</b></span>
   <span id="micState">Mic off</span>
   <span class="meter-label">Voice
-    <span id="meter" title="Say banana loud enough to pass the white line">
+    <span id="meter" title="Shout banana loud enough to pass the white line">
       <span id="meterFill"></span>
       <span id="meterMark"></span>
     </span>
@@ -171,9 +171,9 @@
 </div>
 
 <div id="stage">
-  <canvas id="view" aria-label="A moving jungle. A banana or a coconut may be hidden in the leaves."></canvas>
+  <canvas id="view" aria-label="Jungle Scream Challenge: spot bananas, shout banana, and stay silent for coconuts."></canvas>
 </div>
-<div id="message" role="status">Press Start, allow the microphone, then watch the trees.</div>
+<div id="message" role="status">Press Start, allow microphone access, then shout BANANA when you spot one!</div>
 
 <div>
   <button id="startBtn">Start</button>
@@ -220,8 +220,8 @@
 //  and size still apply on top of that.
 // =====================================================================
 const SETTINGS = {
-  title: "In the Canopy",
-  rules: "Say “banana”, loud enough to cross the line, when you see one. Stay silent for a coconut. Stay silent in the gaps, and once it has gone.",
+  title: "Jungle Scream Challenge",
+  rules: "Shout “banana” when you spot a banana! Your voice must cross the white line to score. Stay completely quiet for coconuts and between turns. The jungle gets faster as you level up.",
 
   say: "banana",             // the only word that counts. Chrome or Edge, online.
 
@@ -1644,8 +1644,8 @@ function practiceHint(utt) {
   if (now - lastQuietMsg < 700) return;
   lastQuietMsg = now;
   message.textContent = utt.loud
-    ? "The mic heard you. Wait until a banana is actually there."
-    : "Louder — take the voice bar past the white line.";
+    ? "Great shout! Wait until a banana appears before shouting."
+    : "Shout louder! Get the voice bar past the white line.";
 }
 
 function duringWord(utt) {
@@ -1665,7 +1665,7 @@ function duringWord(utt) {
     const now = performance.now();
     if (now - lastQuietMsg > 600) {
       lastQuietMsg = now;
-      message.textContent = "Louder — take the voice bar past the white line.";
+      message.textContent = "Shout louder! Get the voice bar past the white line.";
     }
     return;
   }
@@ -1740,7 +1740,7 @@ function betweenWord(utt) {
     correct: 0,
     score: score,
   });
-  message.textContent = "Not in the gap. Say it only while a banana is showing.";
+  message.textContent = "Too early! Only shout BANANA while a banana is visible.";
   monkeyActionType = "dizzy";
   monkeyActionUntil = performance.now() + 1500;
   if (world) {
@@ -1816,7 +1816,7 @@ function startGame() {
   floaties = [];
   toldKeys = false;
   updateHud();
-  message.textContent = "Mic is live. Say the word only when you see a banana, and only loud enough to cross the line.";
+  message.textContent = "Mic is live! Shout BANANA when you see a banana. Stay quiet for coconuts!";
   
   if (audio) {
     startJungleAmbience();
@@ -2202,14 +2202,14 @@ document.getElementById("saveBtn").addEventListener("click", saveCsv);
 stage.addEventListener("pointerdown", () => {
   if (!playing || toldKeys) return;
   toldKeys = true;
-  message.textContent = "Say it out loud. Tapping the jungle does nothing.";
+  message.textContent = "Shout BANANA into your microphone! Clicking does not count.";
 });
 window.addEventListener("keydown", (e) => {
   if (e.code !== "Space") return;
   e.preventDefault();
   if (!playing || toldKeys) return;
   toldKeys = true;
-  message.textContent = "Say it out loud. The keyboard does not answer.";
+  message.textContent = "Shout BANANA into your microphone! The keyboard does not count.";
 });
 
 bindControls();
